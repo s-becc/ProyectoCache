@@ -10,6 +10,7 @@ public class MapeoHash<K,V> implements Map<K,V> {
  private PositionList<Entry<K,V>>[] arreglo;
  private int n;
  private int N;
+ private static final float factorCarga = 0.5f;
  public MapeoHash() {
 	 N = 11;
 	 n = 0;
@@ -43,24 +44,26 @@ public class MapeoHash<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	public V put(K key, V value) throws InvalidKeyException {
-		// TODO Auto-generated method stub
-		if (key == null)
-			throw new InvalidKeyException("La clave no es valida");
-		int index = Math.abs(key.hashCode() % N);
-		V toRet = null;
-		for (Entry<K,V> entrada : arreglo[index])
-			if (entrada.getKey().equals(key)) {
-				toRet = entrada.getValue();
-				entrada.setValue(value);
-				 
-				}
-		if (toRet == null) {
-			arreglo[index].addLast(new Entry<>(key,value));
-		   n++;
-		   }
-		return toRet;
-	}
+	public V put(K key, V value) throws InvalidKeyException { // O(n)
+        if(key == null) throw new InvalidKeyException("No se puede crear una entrada con una clave nula");
+        int bucket =  Math.abs(key.hashCode() % N);
+       
+        V toRet = get(key);
+        if(toRet == null) {
+            arreglo[bucket].addLast(new Entry<K,V>(key, value));
+            n++;
+        }
+        else {
+            for(Position<Entry<K,V>> p : arreglo[bucket].positions()) {
+                if(p.element().getKey().equals(key))
+                    p.element().setValue(value);
+            }
+        }
+        if(n / N > factorCarga)
+            reHash();
+
+        return toRet;
+    }
 
 	 
 	@Override
