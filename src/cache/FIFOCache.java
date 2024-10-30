@@ -1,4 +1,4 @@
-package FIFOCache;
+package cache;
 
 import list.*;
 import map.*;

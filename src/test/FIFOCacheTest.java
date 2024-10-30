@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import FIFOCache.FIFOCache;
+import cache.FIFOCache;
 import list.EmptyListException;
 import list.Position;
 import list.PositionList;
@@ -44,7 +44,7 @@ class FIFOCacheTest {
         }
         assertEquals(List.of(3,4,5),list );
         
-		}
+	}
     
     // Tests propios
     @Test
