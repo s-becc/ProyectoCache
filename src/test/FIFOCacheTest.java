@@ -1,6 +1,7 @@
 package test;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import FIFOCache.FIFOCache;
+import list.EmptyListException;
 import list.Position;
 import list.PositionList;
 
@@ -43,20 +45,51 @@ class FIFOCacheTest {
         assertEquals(List.of(3,4,5),list );
         
 		}
+    
+    // Tests propios
+    @Test
     void testCacheUnaPagina() {
-        FIFOCache cache = new FIFOCache(1);
+        FIFOCache cache = new FIFOCache(1); // Máxima memoria: 1. Fallos: 0
         
-        // Acceso a una página, debería generar un fallo
-        assertFalse(cache.accessPage(1));
+        assertFalse(cache.accessPage(1)); // Acceso a una página, debería generar un fallo. Fallos: 1
         
-        // Acceso repetido a la misma página, no debería generar fallos adicionales
-        assertTrue(cache.accessPage(1));   
+        assertTrue(cache.accessPage(1)); // Acceso repetido a la misma página, no debería generar fallos adicionales. Fallos: 1
+        
+        assertFalse(cache.accessPage(2)); // Acceso a una nueva página, elimina la anterior y genera un fallo. Fallos: 2
 
-        // Acceso a una nueva página, elimina la anterior
-        assertFalse(cache.accessPage(2)); 
+        assertEquals(2, cache.getPageFaultCount()); // Verificar el conteo de fallos de página
+    }
+    
+    @Test
+    void testMaxMemoria() {
+    	int min = 1;
+    	int max = 9999;
+    	int randomMaxMemory = Math.round((float) Math.random()*(max-min) + min); // Un número entre 1 y 9999
+    	
+    	FIFOCache cache = new FIFOCache(randomMaxMemory);
+    	for(int i=1;i<=randomMaxMemory;i++) {
+    		cache.accessPage(i);
+    	}
+    	assertEquals(randomMaxMemory,cache.getPageFaultCount()); //Hasta acá debe tener la misma cantidad de fallos que de páginas nuevas
+    	
+    	assertTrue(cache.accessPage(1)); //Debería recordar a 1
+    	try {
+			assertEquals(1,cache.getPageFrameStatus().first().element()); // Corroboramos que 1 sigue siendo el próximo elemento a eliminar
+		} catch (EmptyListException e) {
+			fail("Cache no tiene primer elemento");
+		}
+    	assertEquals(randomMaxMemory,cache.getPageFaultCount()); // 2 no debería generar un fallo porque la memoria lo debe recordar
+    	
+    	assertFalse(cache.accessPage(0)); // 0 nunca fue ingresado
+    	assertEquals(randomMaxMemory+1,cache.getPageFaultCount());
 
-        // Verificar el conteo de fallos de página
-        assertEquals(2, cache.getPageFaultCount());
+    	try {
+			assertEquals(2,cache.getPageFrameStatus().first().element()); // 2 debería ser el el próximo elemento a eliminar, en vez del 1
+		} catch (EmptyListException e) {
+			fail("Cache no tiene primer elemento");
+		}
+    	assertFalse(cache.accessPage(1)); // 1 debería haber sido olvidado.
+    	assertEquals(randomMaxMemory+2,cache.getPageFaultCount()); // Debe generar un fallo porque no debería estar cacheado.
     }
 
     @Test
