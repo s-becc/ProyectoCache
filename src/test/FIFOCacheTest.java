@@ -64,32 +64,31 @@ class FIFOCacheTest {
     void testMaxMemoria() {
     	int min = 1;
     	int max = 9999;
-    	int randomMaxMemory = Math.round((float) Math.random()*(max-min) + min); // Un número entre 1 y 9999
+    	int randomMaxMemory = Math.round((float) Math.random()*(max-min) + min); // Un número entre 1 y 9999 que define la capacidad máxima del cach
     	
     	FIFOCache cache = new FIFOCache(randomMaxMemory);
     	for(int i=1;i<=randomMaxMemory;i++) {
     		cache.accessPage(i);
     	}
-    	assertEquals(randomMaxMemory,cache.getPageFaultCount()); //Hasta acá debe tener la misma cantidad de fallos que de páginas nuevas
+    	assertEquals(randomMaxMemory,cache.getPageFaultCount()); // Hasta acá cada página accedida fue nueva, generando un fallo por acceso
     	
-    	assertTrue(cache.accessPage(1)); //Debería recordar a 1
+    	assertTrue(cache.accessPage(1)); // Debería recordar a 1 porque todavía no estamos superando la memoria máxima
     	try {
-			assertEquals(1,cache.getPageFrameStatus().first().element()); // Corroboramos que 1 sigue siendo el próximo elemento a eliminar
+			assertEquals(1,cache.getPageFrameStatus().first().element()); // Corroboramos que 1 es el primer elemento de la cola, como página más antigua
 		} catch (EmptyListException e) {
 			fail("Cache no tiene primer elemento");
 		}
-    	assertEquals(randomMaxMemory,cache.getPageFaultCount()); // 2 no debería generar un fallo porque la memoria lo debe recordar
     	
     	assertFalse(cache.accessPage(0)); // 0 nunca fue ingresado
     	assertEquals(randomMaxMemory+1,cache.getPageFaultCount());
 
     	try {
-			assertEquals(2,cache.getPageFrameStatus().first().element()); // 2 debería ser el el próximo elemento a eliminar, en vez del 1
+			assertEquals(2,cache.getPageFrameStatus().first().element()); // 1 debería haber sido eliminado, dejando a 2 como el próximo elemento a eliminar
 		} catch (EmptyListException e) {
 			fail("Cache no tiene primer elemento");
 		}
     	assertFalse(cache.accessPage(1)); // 1 debería haber sido olvidado.
-    	assertEquals(randomMaxMemory+2,cache.getPageFaultCount()); // Debe generar un fallo porque no debería estar cacheado.
+    	assertEquals(randomMaxMemory+2,cache.getPageFaultCount()); // El acceso a 1 debió generar un fallo porque no debería estar cacheado.
     }
 
     @Test
@@ -103,6 +102,8 @@ class FIFOCacheTest {
 
         // Verificar el conteo de fallos  
         assertEquals(3, cache.getPageFaultCount());
+        
+		assertEquals(0,cache.getPageFrameStatus().size()); // Corroboramos que la caché no tiene ningún elemento
     }
 
 
